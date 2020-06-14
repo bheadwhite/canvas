@@ -6,8 +6,8 @@ function App() {
   const position = useRef({ x: 10, y: 10 })
   const keys = []
   const moveIncrement = 10
-  const characterWidth = 50
-  const characterHeight = 50
+  const characterWidth = 20
+  const characterHeight = 20
   const clear = () => {
     const ctx = canvas.current.getContext("2d")
     ctx.clearRect(position.current.x, position.current.y, characterWidth, characterHeight)
@@ -74,9 +74,11 @@ function App() {
         keys.splice(index, 1)
       }
     })
-  }, [keys])
 
-  return <canvas ref={canvas} width={1000} height={1000} tabIndex={1} />
+    return () => clearInterval(interval)
+  }, [keys, handleLeft, handleRight, handleUp, handleDown])
+
+  return <canvas ref={canvas} width={500} height={500} tabIndex={1} />
 }
 
 export default App
