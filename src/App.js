@@ -6,37 +6,47 @@ function App() {
   const position = useRef({ x: 10, y: 10 })
   const keys = []
   const moveIncrement = 10
+  const characterWidth = 50
+  const characterHeight = 50
   const clear = () => {
     const ctx = canvas.current.getContext("2d")
-    ctx.clearRect(position.current.x, position.current.y, 50, 50)
+    ctx.clearRect(position.current.x, position.current.y, characterWidth, characterHeight)
   }
   const draw = () => {
     const ctx = canvas.current.getContext("2d")
-    ctx.fillRect(position.current.x, position.current.y, 50, 50)
+    ctx.fillRect(position.current.x, position.current.y, characterWidth, characterHeight)
   }
 
   const handleLeft = useCallback(() => {
-    console.log("left")
     clear()
-    position.current.x -= moveIncrement
+    if (position.current.x > moveIncrement) {
+      position.current.x -= moveIncrement
+    } else {
+      position.current.x -= position.current.x
+    }
     draw()
   }, [])
   const handleRight = useCallback(() => {
-    console.log("right")
     clear()
-    position.current.x += moveIncrement
+    if (position.current.x < canvas.current.width - characterWidth) {
+      position.current.x += moveIncrement
+    }
     draw()
   }, [])
   const handleUp = useCallback(() => {
-    console.log("up")
     clear()
-    position.current.y -= moveIncrement
+    if (position.current.y > moveIncrement) {
+      position.current.y -= moveIncrement
+    } else {
+      position.current.y -= position.current.y
+    }
     draw()
   }, [])
   const handleDown = useCallback(() => {
-    console.log("down")
     clear()
-    position.current.y += moveIncrement
+    if (position.current.y < canvas.current.height - characterHeight) {
+      position.current.y += moveIncrement
+    }
     draw()
   }, [])
 
