@@ -38,85 +38,34 @@ function App() {
     position.current.y += 5
     draw()
   }, [])
-  const handleUpLeft = useCallback(() => {
-    clear()
-    position.current.y -= 5
-    position.current.x -= 5
-    draw()
-  }, [])
-  const handleUpRight = useCallback(() => {
-    clear()
-    position.current.y -= 5
-    position.current.x += 5
-    draw()
-  }, [])
-  const handleDownLeft = useCallback(() => {
-    clear()
-    position.current.y += 5
-    position.current.x -= 5
-    draw()
-  }, [])
-  const handleDownRight = useCallback(() => {
-    clear()
-    position.current.y += 5
-    position.current.x += 5
-    draw()
-  }, [])
 
   useEffect(() => {
-    const includesKeys = (a, b) => keys.indexOf(a) !== -1 && keys.indexOf(b) !== -1
+    const includesKey = (code) => keys.indexOf(code) !== -1
     draw()
     document.addEventListener("keydown", (e) => {
-      console.log("keydown")
       if (keys.indexOf(e.keyCode) === -1) {
         keys.push(e.keyCode)
       }
-      if (keys.length > 1) {
-        if (includesKeys(38, 37)) {
-          return handleUpLeft()
-        } else if (includesKeys(38, 39)) {
-          return handleUpRight()
-        } else if (includesKeys(40, 39)) {
-          return handleDownRight()
-        } else if (includesKeys(40, 37)) {
-          return handleDownLeft()
-        }
-      } else {
-        switch (e.keyCode) {
-          case 37:
-            handleLeft()
-            break
-          case 38:
-            handleUp()
-            break
-          case 39:
-            handleRight()
-            break
-          case 40:
-            handleDown()
-            break
-          default:
-            return
-        }
-      }
     })
+    const interval = setInterval(() => {
+      if (keys.length > 0) {
+        includesKey(37) && handleLeft()
+        includesKey(38) && handleUp()
+        includesKey(39) && handleRight()
+        includesKey(40) && handleDown()
+      }
+    }, 20)
+
     document.addEventListener("keyup", (e) => {
       if (keys.indexOf(e.keyCode) !== -1) {
         const index = keys.indexOf(e.keyCode)
         keys.splice(index, 1)
       }
+      if (keys.length === 0) {
+        clearInterval(interval)
+      }
     })
-  }, [
-    handleDown,
-    handleLeft,
-    handleUp,
-    handleRight,
-    handleDownLeft,
-    handleDownRight,
-    handleUpLeft,
-    handleUpRight,
-    keys,
-  ])
+  }, [keys])
 
   return <canvas ref={canvas} width={1000} height={1000} tabIndex={1} />
 }
