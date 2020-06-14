@@ -1,82 +1,129 @@
-import React, { useRef, useEffect, useCallback } from "react"
+import React, { useRef, useEffect } from "react"
 import "./App.css"
 
 function App() {
+  const includesKey = (code) => keys.indexOf(code) !== -1
   const canvas = useRef()
   const position = useRef({ x: 10, y: 10 })
   const keys = []
-  const moveIncrement = 10
-  const characterWidth = 20
-  const characterHeight = 20
-  const clear = () => {
-    const ctx = canvas.current.getContext("2d")
-    ctx.clearRect(position.current.x, position.current.y, characterWidth, characterHeight)
-  }
-  const draw = () => {
-    const ctx = canvas.current.getContext("2d")
-    ctx.fillRect(position.current.x, position.current.y, characterWidth, characterHeight)
+  const character = {
+    direction: "left",
+    width: 20,
+    height: 20,
+    moveSpeed: 10,
+    attackSpeed: 50,
   }
 
-  const handleLeft = useCallback(() => {
-    clear()
-    if (position.current.x > moveIncrement) {
-      position.current.x -= moveIncrement
+  document.addEventListener("keyup", (e) => {
+    if (keys.indexOf(e.keyCode) !== -1) {
+      const index = keys.indexOf(e.keyCode)
+      keys.splice(index, 1)
+    }
+  })
+
+  document.addEventListener("keydown", (e) => {
+    console.log(e.keyCode)
+    if (keys.indexOf(e.keyCode) === -1) {
+      keys.push(e.keyCode)
+    }
+  })
+
+  const interval = setInterval(() => {
+    if (keys.length > 0) {
+      includesKey(37) && handleLeft()
+      includesKey(38) && handleUp()
+      includesKey(39) && handleRight()
+      includesKey(40) && handleDown()
+      includesKey(32) && handleAttack()
+    }
+  }, 20)
+
+  const clearCharacter = () => {
+    const ctx = canvas.current.getContext("2d")
+    ctx.clearRect(position.current.x, position.current.y, character.width, character.height)
+  }
+
+  const drawCharacter = React.useCallback(() => {
+    const ctx = canvas.current.getContext("2d")
+    ctx.fillRect(position.current.x, position.current.y, character.width, character.height)
+    if (character.direction === "left") {
+      ctx.clearRect(position.current.x, position.current.y, 5, 5)
+      ctx.clearRect(position.current.x, position.current.y + character.height - 5, 5, 5)
+    } else if (character.direction === "up") {
+      ctx.clearRect(position.current.x, position.current.y, 5, 5)
+      ctx.clearRect(position.current.x + character.width - 5, position.current.y, 5, 5)
+    } else if (character.direction === "right") {
+      ctx.clearRect(position.current.x + character.width - 5, position.current.y, 5, 5)
+      ctx.clearRect(
+        position.current.x + character.width - 5,
+        position.current.y + character.height - 5,
+        5,
+        5
+      )
+    } else if (character.direction === "down") {
+      ctx.clearRect(
+        position.current.x + character.width - 5,
+        position.current.y + character.height - 5,
+        5,
+        5
+      )
+      ctx.clearRect(position.current.x, position.current.y + character.height - 5, 5, 5)
+    }
+  }, [character.width, character.height, character.direction])
+
+  const handleLeft = () => {
+    clearCharacter()
+    character.direction = "left"
+    if (position.current.x > character.moveSpeed) {
+      position.current.x -= character.moveSpeed
     } else {
       position.current.x -= position.current.x
     }
-    draw()
-  }, [])
-  const handleRight = useCallback(() => {
-    clear()
-    if (position.current.x < canvas.current.width - characterWidth) {
-      position.current.x += moveIncrement
+    drawCharacter()
+  }
+
+  const handleRight = () => {
+    character.direction = "right"
+    clearCharacter()
+    if (position.current.x < canvas.current.width - character.width) {
+      position.current.x += character.moveSpeed
     }
-    draw()
-  }, [])
-  const handleUp = useCallback(() => {
-    clear()
-    if (position.current.y > moveIncrement) {
-      position.current.y -= moveIncrement
+    drawCharacter()
+  }
+
+  const handleUp = () => {
+    character.direction = "up"
+    clearCharacter()
+    if (position.current.y > character.moveSpeed) {
+      position.current.y -= character.moveSpeed
     } else {
       position.current.y -= position.current.y
     }
-    draw()
-  }, [])
-  const handleDown = useCallback(() => {
-    clear()
-    if (position.current.y < canvas.current.height - characterHeight) {
-      position.current.y += moveIncrement
+    drawCharacter()
+  }
+
+  const handleDown = () => {
+    character.direction = "down"
+    clearCharacter()
+    if (position.current.y < canvas.current.height - character.height) {
+      position.current.y += character.moveSpeed
     }
-    draw()
-  }, [])
+    drawCharacter()
+  }
+
+  const attack = () => {
+    setInterval()
+  }
+
+  const handleAttack = () => {
+    console.log("hit")
+    const attackInterval = setInterval(() => {}, character.attackSpeed)
+  }
 
   useEffect(() => {
-    const includesKey = (code) => keys.indexOf(code) !== -1
-    console.log(keys)
-    draw()
-    document.addEventListener("keydown", (e) => {
-      if (keys.indexOf(e.keyCode) === -1) {
-        keys.push(e.keyCode)
-      }
-    })
-    const interval = setInterval(() => {
-      if (keys.length > 0) {
-        includesKey(37) && handleLeft()
-        includesKey(38) && handleUp()
-        includesKey(39) && handleRight()
-        includesKey(40) && handleDown()
-      }
-    }, 20)
-
-    document.addEventListener("keyup", (e) => {
-      if (keys.indexOf(e.keyCode) !== -1) {
-        const index = keys.indexOf(e.keyCode)
-        keys.splice(index, 1)
-      }
-    })
-
+    drawCharacter()
     return () => clearInterval(interval)
-  }, [keys, handleLeft, handleRight, handleUp, handleDown])
+  }, [interval, drawCharacter])
 
   return <canvas ref={canvas} width={500} height={500} tabIndex={1} />
 }
