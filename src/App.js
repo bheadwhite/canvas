@@ -4,14 +4,16 @@ import "./App.css"
 function App() {
   const includesKey = (code) => keys.indexOf(code) !== -1
   const canvas = useRef()
-  const position = useRef({ x: 10, y: 10 })
+  const characterPosition = useRef({ x: 10, y: 10 })
+  const weaponPosition = useRef({ x: null, y: null, intervals: [] })
   const keys = []
   const character = {
     direction: "left",
-    width: 20,
-    height: 20,
+    width: 25,
+    height: 25,
     moveSpeed: 10,
-    attackSpeed: 50,
+    attackSpeed: 300,
+    weapon: "bow",
   }
 
   document.addEventListener("keyup", (e) => {
@@ -22,7 +24,6 @@ function App() {
   })
 
   document.addEventListener("keydown", (e) => {
-    console.log(e.keyCode)
     if (keys.indexOf(e.keyCode) === -1) {
       keys.push(e.keyCode)
     }
@@ -38,46 +39,99 @@ function App() {
     }
   }, 20)
 
+  const attackInterval = () => {
+    const id = setInterval(() => {
+      const ctx = canvas.current.getContext("2d")
+      if (character.weapon === "bow") {
+        const centerX = character.width / 2
+        const centerY = character.height / 2
+        if (weaponPosition.current.x == null) {
+          // weaponPosition.current.x = characterPosition.x + centerX
+          // weaponPosition.current.y = characterPosition.y + centerY
+          weaponPosition.current.x = 0
+          weaponPosition.current.y = 0
+        }
+        //initial fill
+        ctx.fillRect(weaponPosition.current.x, weaponPosition.current.y, centerX, centerY)
+      }
+      if (
+        weaponPosition.current.x + character.width < canvas.current.width &&
+        weaponPosition.current.y + character.height < canvas.current.height &&
+        weaponPosition.current.x >= 0 &&
+        weaponPosition.current.y >= 0
+      ) {
+        weaponPosition.current.x += 15
+      } else {
+        weaponPosition.current.x = 0
+        clearInterval(id)
+      }
+    }, character.attackSpeed)
+    // weaponPosition.current.intervals.push(id)
+  }
+
   const clearCharacter = () => {
     const ctx = canvas.current.getContext("2d")
-    ctx.clearRect(position.current.x, position.current.y, character.width, character.height)
+    ctx.clearRect(
+      characterPosition.current.x,
+      characterPosition.current.y,
+      character.width,
+      character.height
+    )
   }
 
   const drawCharacter = React.useCallback(() => {
     const ctx = canvas.current.getContext("2d")
-    ctx.fillRect(position.current.x, position.current.y, character.width, character.height)
+    const clearTopLeft = () =>
+      ctx.clearRect(characterPosition.current.x, characterPosition.current.y, 5, 5)
+    const clearTopRight = () =>
+      ctx.clearRect(
+        characterPosition.current.x + character.width - 5,
+        characterPosition.current.y,
+        5,
+        5
+      )
+    const clearBottomLeft = () =>
+      ctx.clearRect(
+        characterPosition.current.x,
+        characterPosition.current.y + character.height - 5,
+        5,
+        5
+      )
+    const clearBottomRight = () =>
+      ctx.clearRect(
+        characterPosition.current.x + character.width - 5,
+        characterPosition.current.y + character.height - 5,
+        5,
+        5
+      )
+    ctx.fillRect(
+      characterPosition.current.x,
+      characterPosition.current.y,
+      character.width,
+      character.height
+    )
     if (character.direction === "left") {
-      ctx.clearRect(position.current.x, position.current.y, 5, 5)
-      ctx.clearRect(position.current.x, position.current.y + character.height - 5, 5, 5)
+      clearTopLeft()
+      clearBottomLeft()
     } else if (character.direction === "up") {
-      ctx.clearRect(position.current.x, position.current.y, 5, 5)
-      ctx.clearRect(position.current.x + character.width - 5, position.current.y, 5, 5)
+      clearTopLeft()
+      clearTopRight()
     } else if (character.direction === "right") {
-      ctx.clearRect(position.current.x + character.width - 5, position.current.y, 5, 5)
-      ctx.clearRect(
-        position.current.x + character.width - 5,
-        position.current.y + character.height - 5,
-        5,
-        5
-      )
+      clearTopRight()
+      clearBottomRight()
     } else if (character.direction === "down") {
-      ctx.clearRect(
-        position.current.x + character.width - 5,
-        position.current.y + character.height - 5,
-        5,
-        5
-      )
-      ctx.clearRect(position.current.x, position.current.y + character.height - 5, 5, 5)
+      clearBottomLeft()
+      clearBottomRight()
     }
   }, [character.width, character.height, character.direction])
 
   const handleLeft = () => {
     clearCharacter()
     character.direction = "left"
-    if (position.current.x > character.moveSpeed) {
-      position.current.x -= character.moveSpeed
+    if (characterPosition.current.x > character.moveSpeed) {
+      characterPosition.current.x -= character.moveSpeed
     } else {
-      position.current.x -= position.current.x
+      characterPosition.current.x -= characterPosition.current.x
     }
     drawCharacter()
   }
@@ -85,8 +139,8 @@ function App() {
   const handleRight = () => {
     character.direction = "right"
     clearCharacter()
-    if (position.current.x < canvas.current.width - character.width) {
-      position.current.x += character.moveSpeed
+    if (characterPosition.current.x < canvas.current.width - character.width) {
+      characterPosition.current.x += character.moveSpeed
     }
     drawCharacter()
   }
@@ -94,10 +148,10 @@ function App() {
   const handleUp = () => {
     character.direction = "up"
     clearCharacter()
-    if (position.current.y > character.moveSpeed) {
-      position.current.y -= character.moveSpeed
+    if (characterPosition.current.y > character.moveSpeed) {
+      characterPosition.current.y -= character.moveSpeed
     } else {
-      position.current.y -= position.current.y
+      characterPosition.current.y -= characterPosition.current.y
     }
     drawCharacter()
   }
@@ -105,19 +159,16 @@ function App() {
   const handleDown = () => {
     character.direction = "down"
     clearCharacter()
-    if (position.current.y < canvas.current.height - character.height) {
-      position.current.y += character.moveSpeed
+    if (characterPosition.current.y < canvas.current.height - character.height) {
+      characterPosition.current.y += character.moveSpeed
     }
     drawCharacter()
   }
 
-  const attack = () => {
-    setInterval()
-  }
-
   const handleAttack = () => {
-    console.log("hit")
-    const attackInterval = setInterval(() => {}, character.attackSpeed)
+    attackInterval()
+
+    // clearInterval(attackInterval)
   }
 
   useEffect(() => {
